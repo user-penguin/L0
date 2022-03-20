@@ -2,7 +2,7 @@ package model
 
 import "time"
 
-type T struct {
+type Order struct {
 	OrderUid    string `json:"order_uid"`
 	TrackNumber string `json:"track_number"`
 	Entry       string `json:"entry"`
