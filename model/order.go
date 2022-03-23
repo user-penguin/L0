@@ -27,19 +27,7 @@ type Order struct {
 		GoodsTotal   int    `json:"goods_total"`
 		CustomFee    int    `json:"custom_fee"`
 	} `json:"payment"`
-	Items []struct {
-		ChrtId      int    `json:"chrt_id"`
-		TrackNumber string `json:"track_number"`
-		Price       int    `json:"price"`
-		Rid         string `json:"rid"`
-		Name        string `json:"name"`
-		Sale        int    `json:"sale"`
-		Size        string `json:"size"`
-		TotalPrice  int    `json:"total_price"`
-		NmId        int    `json:"nm_id"`
-		Brand       string `json:"brand"`
-		Status      int    `json:"status"`
-	} `json:"items"`
+	Items             []Item    `json:"items"`
 	Locale            string    `json:"locale"`
 	InternalSignature string    `json:"internal_signature"`
 	CustomerId        string    `json:"customer_id"`
@@ -48,4 +36,18 @@ type Order struct {
 	SmId              int       `json:"sm_id"`
 	DateCreated       time.Time `json:"date_created"`
 	OofShard          string    `json:"oof_shard"`
+}
+
+type Item struct {
+	ChrtId      int    `json:"chrt_id"`
+	TrackNumber string `json:"track_number"`
+	Price       int    `json:"price"`
+	Rid         string `json:"rid"`
+	Name        string `json:"name"`
+	Sale        int    `json:"sale"`
+	Size        string `json:"size"`
+	TotalPrice  int    `json:"total_price"`
+	NmId        int    `json:"nm_id"`
+	Brand       string `json:"brand"`
+	Status      int    `json:"status"`
 }
