@@ -56,13 +56,13 @@ func main() {
 	w.Wait()
 }
 
-func insertOrder(ord model.Order, conn pgx.Conn) (uint64, error) {
+func insertOrder(ord model.Order, conn pgx.Conn) (string, error) {
 	orderId, _ := ord.Insert(conn)
 	_, _ = ord.Delivery.Insert(orderId, conn)
 	_, _ = ord.Payment.Insert(orderId, conn)
 	for _, item := range ord.Items {
 		_, _ = item.Insert(orderId, conn)
 	}
-	log.Printf("Last inserted order id: %d", orderId)
+	log.Printf("Last inserted order id: %s", orderId)
 	return orderId, nil
 }
