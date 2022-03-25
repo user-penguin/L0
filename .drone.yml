@@ -1,0 +1,15 @@
+# конфигурационный файл для DRONE-CI
+kind: pipeline
+type: docker
+name: deploy L0 wildberries
+
+steps:
+  - name: test and build
+    image: golang:1.17
+    commands:
+      - go test
+      - go build -o app
+
+trigger:
+  event:
+    - tag
