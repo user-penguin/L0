@@ -16,7 +16,7 @@ type Delivery struct {
 	Email   string `json:"email"`
 }
 
-func (d *Delivery) Insert(orderPK uint64, conn pgx.Conn) (uint64, error) {
+func (d *Delivery) Insert(orderPK string, conn pgx.Conn) (uint64, error) {
 	row := conn.QueryRow(context.Background(),
 		"INSERT INTO delivery ("+
 			"document_id,"+

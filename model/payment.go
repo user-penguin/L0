@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/jackc/pgx/v4"
 	"log"
+	"time"
 )
 
 type Payment struct {
@@ -19,7 +20,7 @@ type Payment struct {
 	CustomFee    int    `json:"custom_fee"`
 }
 
-func (p *Payment) Insert(orderPK uint64, conn pgx.Conn) (uint64, error) {
+func (p *Payment) Insert(orderPK string, conn pgx.Conn) (uint64, error) {
 	row := conn.QueryRow(context.Background(),
 		"INSERT INTO payment ("+
 			"document_id,"+
@@ -40,7 +41,7 @@ func (p *Payment) Insert(orderPK uint64, conn pgx.Conn) (uint64, error) {
 		p.Currency,
 		p.Provider,
 		p.Amount,
-		p.PaymentDt,
+		time.Unix(int64(p.PaymentDt), 0),
 		p.Bank,
 		p.DeliveryCost,
 		p.GoodsTotal,

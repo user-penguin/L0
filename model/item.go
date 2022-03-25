@@ -20,7 +20,7 @@ type Item struct {
 	Status      int    `json:"status"`
 }
 
-func (i *Item) Insert(orderPK uint64, conn pgx.Conn) (uint64, error) {
+func (i *Item) Insert(orderPK string, conn pgx.Conn) (uint64, error) {
 	row := conn.QueryRow(context.Background(),
 		"INSERT INTO item ("+
 			"document_id,"+

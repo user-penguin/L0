@@ -24,7 +24,7 @@ type Order struct {
 	OofShard          string    `json:"oof_shard"`
 }
 
-func (o *Order) Insert(conn pgx.Conn) (uint64, error) {
+func (o *Order) Insert(conn pgx.Conn) (string, error) {
 	row := conn.QueryRow(context.Background(),
 		"INSERT INTO document ("+
 			"order_uid,"+
@@ -38,7 +38,7 @@ func (o *Order) Insert(conn pgx.Conn) (uint64, error) {
 			"sm_id,"+
 			"date_created,"+
 			"oof_shard) "+
-			"VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id",
+			"VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING order_uid",
 		o.OrderUid,
 		o.TrackNumber,
 		o.Entry,
@@ -51,10 +51,10 @@ func (o *Order) Insert(conn pgx.Conn) (uint64, error) {
 		o.DateCreated,
 		o.OofShard,
 	)
-	var id uint64
-	err := row.Scan(&id)
+	var order_uid string
+	err := row.Scan(&order_uid)
 	if err != nil {
-		log.Println(err)
+		log.Printf("Failed in id search: %s", err)
 	}
-	return id, nil
+	return order_uid, nil
 }
