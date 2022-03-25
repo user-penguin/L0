@@ -13,6 +13,8 @@ import (
 const psqlUrl = "postgresql://localhost/L0?user=intern&password=.hbqufufhby"
 
 func main() {
+	// мапа для временного хранения данных
+	cache := make(map[string]model.Order)
 	// устанавливаем соединение с nats-streaming-server
 	sc, err := stan.Connect("test-cluster", "reader")
 	if err != nil {
@@ -46,6 +48,7 @@ func main() {
 			log.Printf("Error in NATS-Order unmarhaling. %s", err)
 		}
 		_, _ = insertOrder(*order, *conn)
+		cache[order.OrderUid] = *order
 	})
 	if err != nil {
 		log.Println(err)
