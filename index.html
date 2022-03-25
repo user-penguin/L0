@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Hello</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<body>
+Wildberries test L0
+<p>________________________</p>
+<form>
+    <input placeholder="Введите uid ордера">
+    <button id="find" type="button">Найти</button>
+</form>
+<p>________________________</p>
+<div class="result">
+
+</div>
+<script>
+    var i = 0
+    $("#find").click(function (){
+        $(".result").append("<p>Запись " + i  +"</p>")
+        i++
+    })
+</script>
+</body>
+</html>
