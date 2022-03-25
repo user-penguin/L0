@@ -9,7 +9,7 @@
 Wildberries test L0
 <p>________________________</p>
 <form>
-    <input placeholder="Введите uid ордера">
+    <input id="uid" placeholder="Введите uid ордера">
     <button id="find" type="button">Найти</button>
 </form>
 <p>________________________</p>
@@ -17,10 +17,14 @@ Wildberries test L0
 
 </div>
 <script>
-    var i = 0
     $("#find").click(function (){
-        $(".result").append("<p>Запись " + i  +"</p>")
-        i++
+        $(".result").empty()
+        var uid = $("#uid").val()
+        if (uid == "") {
+            $(".result").append("<p>Сначала введите uid</p>")
+        } else {
+            $(".result").append("<p>Запись c uid " + uid + " не найдена</p>")
+        }
     })
 </script>
 </body>
