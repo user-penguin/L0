@@ -15,8 +15,7 @@ import (
 const psqlUrl = "postgresql://localhost/L0?user=intern&password=.hbqufufhby"
 
 func main() {
-	// мапа для временного хранения данных
-	cache := make(map[string]model.Order)
+	//cache := make(map[string]model.Order)
 	// устанавливаем соединение с nats-streaming-server
 	sc, err := stan.Connect("test-cluster", "reader")
 	if err != nil {
@@ -42,6 +41,10 @@ func main() {
 		}
 	}(conn, context.Background())
 
+	// при старте сразу получаем мапу, где есть все ордера из БД
+	// далее просто будем туда складывать новые, чтобы  можно было быстро их отдавать при запросе
+	cache := getAllOrders(*conn)
+
 	go serve()
 
 	// основное тело, где происходит принятие сообщений из nats-streaming
@@ -61,6 +64,104 @@ func main() {
 	w := sync.WaitGroup{}
 	w.Add(1)
 	w.Wait()
+}
+
+func getAllOrders(conn pgx.Conn) map[string]model.Order {
+	allOrders := make(map[string]model.Order)
+	items := getItems(conn)
+	documentSQL := "SELECT d.order_uid,d.track_number,d.entry,d.locale,d.internal_signature,d.customer_id,d.delivery_service," +
+		"d.shardkey,d.sm_id,d.date_created,d.oof_shard,p.transaction,p.request_id,p.currency,p.provider,p.amount," +
+		"cast(extract(epoch from p.payment_dt) as bigint),p.bank,p.delivery_cost,p.goods_total,p.custom_fee,del.name," +
+		"del.phone,del.zip,del.city,del.address,del.region,del.email " +
+		"FROM document d " +
+		"JOIN payment p ON d.order_uid = p.document_id " +
+		"JOIN delivery del ON d.order_uid = del.document_id"
+	rows, err := conn.Query(context.Background(), documentSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var o model.Order
+		err := rows.Scan(
+			&o.OrderUid,
+			&o.TrackNumber,
+			&o.Entry,
+			&o.Locale,
+			&o.InternalSignature,
+			&o.CustomerId,
+			&o.DeliveryService,
+			&o.Shardkey,
+			&o.SmId,
+			&o.DateCreated,
+			&o.OofShard,
+			&o.Payment.Transaction,
+			&o.Payment.RequestId,
+			&o.Payment.Currency,
+			&o.Payment.Provider,
+			&o.Payment.Amount,
+			&o.Payment.PaymentDt,
+			&o.Payment.Bank,
+			&o.Payment.DeliveryCost,
+			&o.Payment.GoodsTotal,
+			&o.Payment.CustomFee,
+			&o.Delivery.Name,
+			&o.Delivery.Phone,
+			&o.Delivery.Zip,
+			&o.Delivery.City,
+			&o.Delivery.Address,
+			&o.Delivery.Region,
+			&o.Delivery.Email)
+		if err != nil {
+			log.Fatal(err)
+		}
+		itemsByUid := items[o.OrderUid]
+		for _, item := range itemsByUid {
+			o.Items = append(o.Items, item)
+		}
+		allOrders[o.OrderUid] = o
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return allOrders
+}
+
+func getItems(conn pgx.Conn) map[string][]model.Item {
+	itemsSQL := "SELECT document_id,chrt_id,track_number,price,rid,name,sale,size,total_price,nm_id,brand,status " +
+		"FROM item"
+	rows, err := conn.Query(context.Background(), itemsSQL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	items := make(map[string][]model.Item)
+	var item model.Item
+	var uid string
+	for rows.Next() {
+		err := rows.Scan(
+			&uid,
+			&item.ChrtId,
+			&item.TrackNumber,
+			&item.Price,
+			&item.Rid,
+			&item.Name,
+			&item.Sale,
+			&item.Size,
+			&item.TotalPrice,
+			&item.NmId,
+			&item.Brand,
+			&item.Status)
+		if err != nil {
+			log.Fatal(err)
+		}
+		items[uid] = append(items[uid], item)
+	}
+	if err := rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+	return items
 }
 
 func serve() {
