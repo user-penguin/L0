@@ -2,20 +2,18 @@ package main
 
 import (
 	"L0/model"
+	"L0/server"
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/jackc/pgx/v4"
 	"github.com/nats-io/stan.go"
 	"log"
-	"net/http"
 	"sync"
 )
 
 const psqlUrl = "postgresql://localhost/L0?user=intern&password=.hbqufufhby"
 
 func main() {
-	//cache := make(map[string]model.Order)
 	// устанавливаем соединение с nats-streaming-server
 	sc, err := stan.Connect("test-cluster", "reader")
 	if err != nil {
@@ -45,7 +43,7 @@ func main() {
 	// далее просто будем туда складывать новые, чтобы  можно было быстро их отдавать при запросе
 	cache := getAllOrders(*conn)
 
-	go serve()
+	go server.Serve(&cache)
 
 	// основное тело, где происходит принятие сообщений из nats-streaming
 	_, err = sc.Subscribe("wild", func(msg *stan.Msg) {
@@ -162,19 +160,6 @@ func getItems(conn pgx.Conn) map[string][]model.Item {
 		log.Fatal(err)
 	}
 	return items
-}
-
-func serve() {
-	port := ":8080"
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, _ = fmt.Fprintf(w, "Добро пожаловать в мир Golang\n")
-		log.Printf("Method:%s, Request URI:%s", r.Method, r.RequestURI)
-	})
-	err := http.ListenAndServe(port, nil)
-	if err != nil {
-		log.Printf("Server dosn't start: %s", err)
-	}
-	log.Printf("Server is running now on localhost%s", port)
 }
 
 func insertOrder(ord model.Order, conn pgx.Conn) (string, error) {
