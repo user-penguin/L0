@@ -8,7 +8,7 @@
 <body>
 Wildberries test L0
 <p>________________________</p>
-<form>
+<form id="main">
     <input id="uid" placeholder="Введите uid ордера">
     <button id="find" type="button">Найти</button>
 </form>
@@ -17,15 +17,100 @@ Wildberries test L0
 
 </div>
 <script>
-    $("#find").click(function (){
+    // запуск ajax-скрипта по клику кнопки
+    $("#find").click(function () {
+        startMagic()
+    })
+
+    // запуск ajax-скрипта по клику клавиши enter
+    $('#main').keypress(function (e) {
+        var key = e.which;
+        if(key == 13)  // the enter key code
+        {
+            startMagic()
+            return false;
+        }
+    });
+
+    // основная логика работы по заполнению, очистке поля с результатами
+    function startMagic(){
         $(".result").empty()
         var uid = $("#uid").val()
         if (uid == "") {
             $(".result").append("<p>Сначала введите uid</p>")
         } else {
-            $(".result").append("<p>Запись c uid " + uid + " не найдена</p>")
+            getData(uid)
         }
-    })
+    }
+
+    // обработка двухсотки
+    function okHandler(data) {
+        var resBox = ($(".result"))
+        resBox.append("<p>Order UID: "+data.order_uid+"</p>")
+        resBox.append("<p>Track number: "+data.track_number+"</p>")
+        resBox.append("<p>Entry: "+data.entry+"</p>")
+        resBox.append("<p>Delivery:</p>")
+        resBox.append("<p>&nbsp;&nbsp;Name: "+data.delivery.name+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Phone: "+data.delivery.phone+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Zip code: "+data.delivery.zip+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;City: "+data.delivery.city+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Address: "+data.delivery.address+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Region: "+data.delivery.region+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Email: "+data.delivery.email+"</p>")
+        resBox.append("<p>Payment:</p>")
+        resBox.append("<p>&nbsp;&nbsp;Transaction: "+data.payment.transaction+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Request ID: "+data.payment.request_id+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Currency: "+data.payment.currency+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Provider: "+data.payment.provider+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Amount: "+data.payment.amount+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Payment DT: "+data.payment.payment_dt+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Bank: "+data.payment.bank+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Delivery cost: "+data.payment.delivery_cost+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Goods total: "+data.payment.goods_total+"</p>")
+        resBox.append("<p>&nbsp;&nbsp;Custom fee: "+data.payment.custom_fee+"</p>")
+        resBox.append("<p>Items:</p>")
+        var n = 1
+        data.items.forEach(item=>{
+            resBox.append("<p>&nbsp;&nbsp;"+n+". _______________________</p>")
+            resBox.append("<p>&nbsp;&nbsp;Chart ID: "+item.chrt_id+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Track number: "+item.track_number+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Price: "+item.price+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;RID: "+item.rid+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Name: "+item.name+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Sale: "+item.sale+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Size: "+item.size+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Total price: "+item.total_price+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;NM ID: "+item.nm_id+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Brand: "+item.brand+"</p>")
+            resBox.append("<p>&nbsp;&nbsp;Status: "+item.status+"</p>")
+            n++
+        })
+
+        resBox.append("<p>Locale: "+data.locale+"</p>")
+        resBox.append("<p>Internal signature: "+data.internal_signature+"</p>")
+        resBox.append("<p>Customer ID: "+data.customer_id+"</p>")
+        resBox.append("<p>Delivery service: "+data.delivery_service+"</p>")
+        resBox.append("<p>Shardkey: "+data.shardkey+"</p>")
+        resBox.append("<p>SM ID: "+data.sm_id+"</p>")
+        resBox.append("<p>Date created: "+data.date_created+"</p>")
+        resBox.append("<p>OOF Shard: "+data.oof_shard+"</p>")
+    }
+
+    // обработка остальных результатов ajax-запроса
+    function failHandler(data) {
+        var resBox = ($(".result"))
+        resBox.append("<p>"+data.responseText+"</p>")
+    }
+
+    function getData(uid) {
+        $.getJSON("http://localhost:8080/order/"+uid, {
+            format: "json"
+        }).done(function (data) {
+            okHandler(data)
+        }).fail(function (data) {
+            failHandler(data)
+        })
+    }
 </script>
 </body>
 </html>
