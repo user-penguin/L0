@@ -8,7 +8,7 @@ import (
 )
 
 type Order struct {
-	OrderUid          string    `json:"order_uid"`
+	OrderUid          string    `json:"order_uid" validate:"required,min=5,max=99"`
 	TrackNumber       string    `json:"track_number"`
 	Entry             string    `json:"entry"`
 	Delivery          Delivery  `json:"delivery"`

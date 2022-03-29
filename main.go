@@ -5,6 +5,8 @@ import (
 	"L0/server"
 	"context"
 	"encoding/json"
+	"fmt"
+	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v4"
 	"github.com/nats-io/stan.go"
 	"log"
@@ -15,7 +17,7 @@ const psqlUrl = "postgresql://localhost/L0?user=intern&password=.hbqufufhby"
 
 func main() {
 	// устанавливаем соединение с nats-streaming-server
-	sc, err := stan.Connect("test-cluster", "reader")
+	sc, err := stan.Connect("test-cluster", "reader", stan.NatsURL("http://192.168.0.2:4222"))
 	if err != nil {
 		log.Printf("Connections error, reason:%s", err)
 		panic("error connection") // если не законнектили, нечего продолжать
@@ -52,8 +54,11 @@ func main() {
 		if err != nil {
 			log.Printf("Error in NATS-Order unmarhaling. %s", err)
 		}
-		_, _ = insertOrder(*order, *conn)
-		cache[order.OrderUid] = *order
+
+		if isOrderValid(*order) {
+			_, _ = insertOrder(*order, *conn)
+			cache[order.OrderUid] = *order
+		}
 	})
 	if err != nil {
 		log.Println(err)
@@ -62,6 +67,22 @@ func main() {
 	w := sync.WaitGroup{}
 	w.Add(1)
 	w.Wait()
+}
+
+func isOrderValid(order model.Order) bool {
+	validate := validator.New()
+	err := validate.Struct(order)
+	if err != nil {
+		if _, ok := err.(*validator.InvalidValidationError); ok {
+			log.Printf("This object can't parse")
+			return true
+		}
+		for _, err := range err.(validator.ValidationErrors) {
+			fmt.Printf("Reason: %s\n", err.Error())
+			return false
+		}
+	}
+	return true
 }
 
 func getAllOrders(conn pgx.Conn) map[string]model.Order {
