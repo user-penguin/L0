@@ -56,8 +56,12 @@ func main() {
 		}
 
 		if isOrderValid(*order) {
-			_, _ = insertOrder(*order, *conn)
-			cache[order.OrderUid] = *order
+			_, err = insertOrder(*order, *conn)
+			if err != nil {
+				log.Printf("Document insert error: %s", err)
+			} else {
+				cache[order.OrderUid] = *order
+			}
 		}
 	})
 	if err != nil {
@@ -184,11 +188,24 @@ func getItems(conn pgx.Conn) map[string][]model.Item {
 }
 
 func insertOrder(ord model.Order, conn pgx.Conn) (string, error) {
-	orderId, _ := ord.Insert(conn)
-	_, _ = ord.Delivery.Insert(orderId, conn)
-	_, _ = ord.Payment.Insert(orderId, conn)
+	orderId, err := ord.Insert(conn)
+	if err != nil {
+		log.Printf("Order insert error: %s", err)
+		return "", err
+	}
+	_, err = ord.Delivery.Insert(orderId, conn)
+	if err != nil {
+		log.Printf("Delivery insert error: %s", err)
+	}
+	_, err = ord.Payment.Insert(orderId, conn)
+	if err != nil {
+		log.Printf("Payment insert error: %s", err)
+	}
 	for _, item := range ord.Items {
-		_, _ = item.Insert(orderId, conn)
+		_, err = item.Insert(orderId, conn)
+		if err != nil {
+			log.Printf("Item insert error: %s", err)
+		}
 	}
 	log.Printf("Last inserted order id: %s", orderId)
 	return orderId, nil
